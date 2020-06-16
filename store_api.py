@@ -1,5 +1,5 @@
 from flask import Flask,request
-from flask_restful import Resource,Api
+from flask_restful import Resource,Api,reqparse
 from flask_jwt import JWT,jwt_required
 
 from security import authenticate,identity
@@ -32,6 +32,26 @@ class Store(Resource):
         global items
         items=list(filter(lambda x: x['item_name']!=name,items))
         return {"message":"item deleted!"}
+
+    def put(self,name):
+        parser=reqparse.RequestParser()
+        parser.add_argument(
+            'price',
+            required=True,
+            type=float,
+            help="this field cannot be blank!"
+        )
+        request_data=parser.parse_args()
+        item=next(filter(lambda x:x['item_name']==name,items),None)
+        if item is None:
+            new_item={
+                'item_name':name,
+                'price':request_data['price']
+            }
+            items.append(new_item)
+        else:    
+            item.update(request_data)
+        return item
 
 
 class ItemList(Resource):
